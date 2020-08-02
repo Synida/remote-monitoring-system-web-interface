@@ -18,7 +18,15 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/logout', 'AuthController@logoutView');
-Route::post('/login', 'AuthController@logoutView');
+// access to login function
+Route::post('/login', 'AuthController@login');
+//Route::options('/login', 'AuthController@options');
 
-
+//Route::group(['middleware' => 'auth:api'], function() {
+//    // logging out a user
+//    Route::post('/logout', 'AuthController@logoutView');
+//    // get multiple measurable objects from the db for display
+//    Route::get('/measurable', 'MeasurableController@actionIndex');
+//    // get the last measurable object for display
+//    Route::get('/measurable/last', 'MeasurableController@actionGetLast');
+//});
