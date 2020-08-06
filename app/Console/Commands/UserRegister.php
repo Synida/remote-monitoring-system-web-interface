@@ -4,13 +4,12 @@ namespace App\Console\Commands;
 
 use App\User;
 use Illuminate\Console\Command;
-use Illuminate\Validation\Rule;
 
 /**
- * Class Register
+ * Class UserRegister
  * @package App\Console\Commands
  */
-class Register extends Command
+class UserRegister extends Command
 {
     /**
      * @const int
@@ -22,7 +21,7 @@ class Register extends Command
      *
      * @var string
      */
-    protected $signature = 'register {email} {password}';
+    protected $signature = 'user:register {email}';
 
     /**
      * The console command description.
@@ -49,19 +48,23 @@ class Register extends Command
     public function handle()
     {
         $email = $this->argument('email');
-        $password = $this->argument('password');
 
         // Validates the the email.
-        if (!$this->isEmailValid($email)
-            // Validates the password.
-            || !$this->isPasswordValid($password)) {
+        if (!$this->isEmailValid($email)) {
+            return 1;
+        }
+
+        $this->info('Password: ');
+        $password = readline();
+        // Validates the password.
+        if (!$this->isPasswordValid($password)) {
             return 1;
         }
 
         // Creates a user in the database.
         $this->createUser($email, $password);
 
-        $this->info('OK');
+        $this->info("User({$email}) successfully registered!");
 
         return 0;
     }
