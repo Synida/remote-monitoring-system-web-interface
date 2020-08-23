@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\User;
 
 use App\User;
 use Illuminate\Console\Command;
 
 /**
  * Class UserList
- * @package App\Console\Commands
+ * @package App\Console\Commands\User
  */
 class UserList extends Command
 {

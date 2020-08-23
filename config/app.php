@@ -230,4 +230,5 @@ return [
 
     ],
 
+    'memory_limit' => '256M'
 ];

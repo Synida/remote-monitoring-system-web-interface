@@ -2,29 +2,29 @@
 
 namespace App\Console\Commands;
 
-use App\User;
-use Exception;
+use App\Measurable;
+use App\MeasuredItem;
 use Illuminate\Console\Command;
 
 /**
- * Class UserDelete
+ * Class Maintenance
  * @package App\Console\Commands
  */
-class UserDelete extends Command
+class Maintenance extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'user:delete {email}';
+    protected $signature = 'maintenance {before}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Deletes a user from the database';
+    protected $description = 'Cleans the database from the old data';
 
     /**
      * Create a new command instance.
@@ -40,22 +40,23 @@ class UserDelete extends Command
      * Execute the console command.
      *
      * @return int
-     * @throws Exception
      */
     public function handle()
     {
-        $email = $this->argument('email');
+        $before = $this->argument('before');
 
-        $user = User::where('email', $email)->first();
-
-        if (!$user instanceof User) {
-            $this->error("User({$email}) not found in the database.");
+        if (!is_numeric($before)) {
+            $this->error('The "before" parameter must be numeric!');
             return 1;
         }
 
-        $user->delete();
+        $measurables = Measurable::all();
 
-        $this->info('User deleted successfully!');
+        foreach ($measurables as $measurable) {
+            MeasuredItem::setDBTable($measurable->table)
+                ->where('created_at', '<', $before)
+                ->delete();
+        }
 
         return 0;
     }

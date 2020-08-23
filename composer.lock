@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fdd15d66d4997762a50b33c416de1b0d",
+    "content-hash": "256fded676f50bc483e7e9004ebbed21",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -109,6 +109,42 @@
                 }
             ],
             "time": "2020-04-15T15:59:35+00:00"
+        },
+        {
+            "name": "brlabrussia/parallel-stub",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/brlabrussia/parallel-stub.git",
+                "reference": "d403a5e28871c3ee287837b689cb6ccc489fec76"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/brlabrussia/parallel-stub/zipball/d403a5e28871c3ee287837b689cb6ccc489fec76",
+                "reference": "d403a5e28871c3ee287837b689cb6ccc489fec76",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": ".fry",
+                    "email": "fry@6dreams.net"
+                }
+            ],
+            "description": "Provide parallel PHP extension stub",
+            "homepage": "https://github.com/brlabrussia/parallel-stub",
+            "keywords": [
+                "parallel",
+                "stub"
+            ],
+            "time": "2019-09-02T10:55:07+00:00"
         },
         {
             "name": "defuse/php-encryption",
@@ -6647,6 +6683,7 @@
             "keywords": [
                 "tokenizer"
             ],
+            "abandoned": true,
             "time": "2019-09-17T06:23:10+00:00"
         },
         {
@@ -7534,7 +7571,9 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.2.5"
+        "php": "^7.2.5",
+        "ext-parallel": "*",
+        "ext-readline": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "1.1.0"
