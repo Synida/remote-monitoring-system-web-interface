@@ -96,6 +96,12 @@ class ThreadManager extends Command
      * Initializes the manager
      *
      * @return void
+     * @throws Runtime\Error\Closed
+     * @throws Runtime\Error\IllegalFunction
+     * @throws Runtime\Error\IllegalInstruction
+     * @throws Runtime\Error\IllegalParameter
+     * @throws Runtime\Error\IllegalReturn
+     * @throws Runtime\Error\IllegalVariable
      * @author Synida Pry
      */
     public function init(): void
@@ -147,7 +153,8 @@ class ThreadManager extends Command
      */
     public function initVariables(): void
     {
-        $measurables = Measurable::all();
+        $measurables = Measurable::where('active', '==', true)
+            ->get();
 
         $this->query = static function (Channel $channel, $className, $frequency) {
             $namespace = 'App\\Http\\Measurable\\';
@@ -155,19 +162,17 @@ class ThreadManager extends Command
             $object = new $class();
 
             while (1) {
-                if (time() % $frequency) {
+                if (!(time() % $frequency)) {
                     // Returns with a measurable information
                     $channel->send($object->execute());
                 }
             }
         };
 
+        $this->resultChannel = new Channel();
+
         /** @var Measurable $measurable */
         foreach ($measurables as $measurable) {
-            if (!$measurable->active) {
-                continue;
-            }
-
             try {
                 Schema::create($measurable->table, function (Blueprint $table) {
                     $table->id()->autoIncrement();
