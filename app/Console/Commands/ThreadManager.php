@@ -71,6 +71,13 @@ class ThreadManager extends Command
      * Execute the console command.
      *
      * @return void
+     * @throws Channel\Error\Existence
+     * @throws Runtime\Error\Closed
+     * @throws Runtime\Error\IllegalFunction
+     * @throws Runtime\Error\IllegalInstruction
+     * @throws Runtime\Error\IllegalParameter
+     * @throws Runtime\Error\IllegalReturn
+     * @throws Runtime\Error\IllegalVariable
      */
     public function handle()
     {
