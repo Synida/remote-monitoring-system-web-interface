@@ -50,9 +50,7 @@ class MeasurableList extends Command
             $this->info('DB is empty!');
         }
 
-        foreach ($measurables as $measurable) {
-            $this->info(print_r($measurable, true));
-        }
+        $this->info(DD($measurables->toArray()));
 
         return 0;
     }

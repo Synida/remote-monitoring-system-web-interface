@@ -45,7 +45,11 @@ class MeasurableDelete extends Command
     public function handle()
     {
         $id = $this->argument('id');
-        // TODO: validations
+
+        if (!is_numeric($id)) {
+            $this->error('The ID must be numeric');
+            return 1;
+        }
 
         $measurable = Measurable::where('id', $id)->first();
 

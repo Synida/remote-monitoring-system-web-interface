@@ -46,15 +46,17 @@ class MeasurableAdd extends Command
         $name = $this->argument('name');
         $table = $this->argument('table');
         $unit = $this->argument('unit');
+        $class = $this->argument('class');
         $updateFrequency = $this->argument('frequency');
 
-        // TODO: validations
+        // TODO: validations; create a validation class accessable from the MeasurableUpdate class too
 
         Measurable::create(
             [
                 'active' => $active,
                 'name' => $name,
                 'table' => $table,
+                'class' => $class,
                 'unit' => $unit,
                 'frequency' => $updateFrequency
             ]

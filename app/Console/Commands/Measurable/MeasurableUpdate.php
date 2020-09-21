@@ -45,7 +45,11 @@ class MeasurableUpdate extends Command
         $id = $this->argument('id');
         $field = $this->argument('field');
         $value = $this->argument('value');
-        // TODO: validations
+
+        // Validates the arguments of the command.
+        if (!$this->isValidateArgs($id, $field, $value)) {
+            return 1;
+        }
 
         $measurable = Measurable::where('id', $id)->first();
 
@@ -66,5 +70,32 @@ class MeasurableUpdate extends Command
         return 0;
     }
 
+    /**
+     * Validates the arguments of the command.
+     *
+     * @param string $id
+     * @param string $field
+     * @param string $value
+     * @return bool
+     * @author Synida Pry
+     */
+    public function isValidateArgs($id, $field, $value)
+    {
+        if (!is_numeric($id)) {
+            $this->error('The ID must be numeric');
+            return 0;
+        }
 
+        // Returns with the fillable of this class
+        $allowedFields = (new Measurable)->getFillable();
+        if (!in_array($field, $allowedFields)) {
+            $this->error('The field must be one of the available fields: ');
+            DD($allowedFields);
+            return 0;
+        }
+
+        // TODO: validate value towards the fields
+
+        return 1;
+    }
 }

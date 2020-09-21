@@ -25,7 +25,7 @@ class CreateMeasurableTable extends Migration
                 ->comment('status of the measurable');
             $table->string('table')
                 ->comment('database table name of the measurable');
-            $table->integer('update_frequency')
+            $table->integer('frequency')
                 ->comment('update frequency in ms, that defines how often the measurable object need to be checked');
             $table->timestamps();
         });
