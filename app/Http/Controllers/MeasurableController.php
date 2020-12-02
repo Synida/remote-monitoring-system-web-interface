@@ -6,6 +6,7 @@ use App\Measurable;
 use App\MeasuredItem;
 use http\Exception\InvalidArgumentException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class MeasurableController
@@ -22,12 +23,11 @@ class MeasurableController extends Controller
      */
     public function index(Request $request)
     {
-        $exists = Measurable::andWhere('table', '==', $request->type)
-            ->andWhere('active', '==', true)
-            ->limit(1)
-            ->count();
+        $exists = Measurable::where('table', '==', $request->type)
+            ->where('active', '==', true)
+            ->first();
 
-        if (!$exists) {
+        if ($exists === null) {
             throw new InvalidArgumentException('There is no such active measured object!');
         }
 
@@ -38,7 +38,20 @@ class MeasurableController extends Controller
         }
 
         return MeasuredItem::setDBTable($request->type)
-            ->andWhere('created_at', '>', $from)
+            ->where('created_at', '>', $from)
             ->get();
+    }
+
+    /**
+     * Returns with the active measurable objects.
+     *
+     * @param Request $request
+     * @return array
+     * @author Synida Pry
+     */
+    public function getActive(Request $request)
+    {
+        return Measurable::where('active', true)
+            ->get(['id', 'name', 'frequency', 'unit']);
     }
 }

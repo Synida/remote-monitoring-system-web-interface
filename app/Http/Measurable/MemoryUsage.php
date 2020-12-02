@@ -1,7 +1,6 @@
 <?php
 /**
  * Created by Synida Pry.
- * Copyright © 2020. TakeNote. All rights reserved.
  */
 
 namespace App\Http\Measurable;
@@ -17,7 +16,7 @@ class MemoryUsage implements MeasurableInterface
     /**
      * Returns with the memory usage percentage
      *
-     * @return mixed
+     * @return string
      * @author Synida Pry
      */
     public function execute()
@@ -25,10 +24,6 @@ class MemoryUsage implements MeasurableInterface
         $freeMemory = explode("\n", (string)trim(shell_exec('free')))[1];
         $memory = array_merge(array_filter(explode(" ", $freeMemory)));
 
-        return [
-            'current' => round($memory[2] / $memory[1] * 100, 2),
-            'min' => 0,
-            'max' => round($memory[1] / 1073741824, 2) . ' GB'
-        ];
+        return round($memory[2] / 1073741824, 2);
     }
 }

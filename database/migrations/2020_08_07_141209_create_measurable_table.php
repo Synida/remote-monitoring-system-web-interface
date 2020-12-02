@@ -23,6 +23,10 @@ class CreateMeasurableTable extends Migration
                 ->comment('unit of the measurable, like °C, Hz, ect.');
             $table->boolean('active')
                 ->comment('status of the measurable');
+            $table->string('max')
+                ->comment('max value of a specific measurable');
+            $table->string('min')
+                ->comment('min value of a specific measurable');
             $table->string('table')
                 ->comment('database table name of the measurable');
             $table->integer('frequency')

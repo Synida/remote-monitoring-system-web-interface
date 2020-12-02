@@ -55,6 +55,10 @@ class Measurable extends Model
         'table',
         // unit of the measurable, like °C, Hz, ect.
         'unit',
+        // max value of a specific measurable
+        'max',
+        // min value of a specific measurable
+        'min',
         // update frequency in ms, that defines how often the measurable object need to be checked
         'frequency'
     ];

@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Measurable;
 use App\MeasuredItem;
 use Closure;
-use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +17,7 @@ use parallel\Runtime;
  *
  * @property Closure $query
  * @property Runtime[] $measurableThreads
- * @property Channel $resultChannel
+ * @property Channel[] $resultChannels
  */
 class ThreadManager extends Command
 {
@@ -55,7 +54,14 @@ class ThreadManager extends Command
      *
      * @var Channel
      */
-    protected $resultChannel;
+    protected $resultChannels;
+
+    /**
+     * Contains the active measurables
+     *
+     * @var Measurable[]
+     */
+    protected $measurables;
 
     /**
      * Create a new command instance.
@@ -72,6 +78,8 @@ class ThreadManager extends Command
      *
      * @return void
      * @throws Channel\Error\Existence
+     * @throws Runtime\Error
+     * @throws Runtime\Error\Bootstrap
      * @throws Runtime\Error\Closed
      * @throws Runtime\Error\IllegalFunction
      * @throws Runtime\Error\IllegalInstruction
@@ -84,16 +92,29 @@ class ThreadManager extends Command
         // Initializes the manager
         $this->init();
 
+        foreach ($this->measurables as $measurable) {
+            $this->resultChannels[$measurable->table] = Channel::make($measurable->table);
+
+            $namespace = 'App\\Http\\Measurable\\';
+            $class = "{$namespace}{$measurable->class}";
+            $object = new $class();
+
+            $this->measurableThreads[$measurable->table] = (new Runtime(
+                __DIR__ . "/../../../vendor/autoload.php"
+            ))
+                ->run($this->query, [$this->resultChannels[$measurable->table], $object, $measurable->frequency]);
+        }
+
         while (1) {
             foreach ($this->measurableThreads as $measurableTable => $future) {
-                $measured = $this->resultChannel->recv();
-                if ($measured === null) {
+                $openChannel = Channel::open($this->resultChannels[$measurableTable]);
+                $result = $openChannel->recv();
+                if ($result === null) {
                     continue;
                 }
 
-                // TODO: if measured is the same as last time, dont update the db?
                 $measuredItem = MeasuredItem::setDBTable($measurableTable);
-                $measuredItem->value = $measured['current'];
+                $measuredItem->value = (string)$result;
                 $measuredItem->save();
             }
         }
@@ -103,19 +124,13 @@ class ThreadManager extends Command
      * Initializes the manager
      *
      * @return void
-     * @throws Runtime\Error\Closed
-     * @throws Runtime\Error\IllegalFunction
-     * @throws Runtime\Error\IllegalInstruction
-     * @throws Runtime\Error\IllegalParameter
-     * @throws Runtime\Error\IllegalReturn
-     * @throws Runtime\Error\IllegalVariable
      * @author Synida Pry
      */
     public function init(): void
     {
         ini_set('memory_limit', config('app.memory_limit'));
         set_time_limit(0);
-        declare(ticks = 1);
+        declare(ticks=1);
 
         register_shutdown_function([$this, 'onShutdown']);
         pcntl_signal(SIGTERM, [$this, 'onSignal']);
@@ -124,6 +139,49 @@ class ThreadManager extends Command
 
         // Initializes the service variables
         $this->initVariables();
+    }
+
+    /**
+     * Initializes the DB query closure.
+     *
+     * @return void
+     * @author Synida Pry
+     */
+    public function initVariables(): void
+    {
+        $this->measurables = Measurable::where('active', true)
+            ->get();
+
+        $this->query = static function (Channel $channel, $object, $frequency) {
+            $open = time();
+            while (1) {
+                $time = time();
+                if (!($time % $frequency) && $open !== $time) {
+                    echo "*";
+                    // Puts the measured value to the channel
+                    $channel->send($object->execute());
+                    $open = $time;
+                } else {
+                    // clearing the channel
+                    $channel->send(null);
+                }
+            }
+        };
+
+        /** @var Measurable $measurable */
+        foreach ($this->measurables as $measurable) {
+            if (!Schema::hasTable($measurable->table)) {
+                Schema::create(
+                    $measurable->table,
+                    function (Blueprint $table) {
+                        $table->id()->autoIncrement();
+                        $table->double('value')
+                            ->comment('Measured value');
+                        $table->timestamps();
+                    }
+                );
+            }
+        }
     }
 
     /**
@@ -144,87 +202,5 @@ class ThreadManager extends Command
     {
         $this->info('Shutdown called, exiting.');
         // TODO: close the channels
-    }
-
-    /**
-     * Initializes the DB query closure.
-     *
-     * @return void
-     * @throws Runtime\Error\Closed
-     * @throws Runtime\Error\IllegalFunction
-     * @throws Runtime\Error\IllegalInstruction
-     * @throws Runtime\Error\IllegalParameter
-     * @throws Runtime\Error\IllegalReturn
-     * @throws Runtime\Error\IllegalVariable
-     * @author Synida Pry
-     */
-    public function initVariables(): void
-    {
-        $measurables = Measurable::where('active', '==', true)
-            ->get();
-
-        $this->query = static function (Channel $channel, $className, $frequency) {
-            $namespace = 'App\\Http\\Measurable\\';
-            $class = "{$namespace}{$className}";
-            $object = new $class();
-
-            while (1) {
-                if (!(time() % $frequency)) {
-                    // Returns with a measurable information
-                    $channel->send($object->execute());
-                }
-            }
-        };
-
-        $this->resultChannel = new Channel();
-
-        /** @var Measurable $measurable */
-        foreach ($measurables as $measurable) {
-            try {
-                Schema::create($measurable->table, function (Blueprint $table) {
-                    $table->id()->autoIncrement();
-                    $table->double('value')
-                        ->comment('Measured value');
-                    $table->timestamps();
-                });
-            } catch (Exception $e) {
-                $this->info($e->getMessage());
-            }
-
-            $this->measurableThreads[$measurable->table] = (new Runtime())
-                ->run($this->query, [$this->resultChannel, $measurable->class, $measurable->frequency]);
-        }
-
-//        $this->queueUpdateFrequency = Yii::$app->params['taskManager']['queueUpdateFrequency'];
-//        $this->dbQueryThread = (new Runtime(Yii::$app->params['taskManager']['bootstrapFile']));
-//
-//        $this->dbQueryClosure = static function ($taskQueue = [], $mode = null) {
-//            new Autoloader($mode);
-//
-//            $resultsArray = (new ThreadedExecutionManagerSearch())->search(['taskQueue' => $taskQueue])->getModels();
-//            $objects = [];
-//            foreach ($resultsArray as $taskArray) {
-//                $baseTask = new BaseTask();
-//                $baseTask->setAttributes($taskArray, false);
-//                $objects[] = $baseTask;
-//            }
-//
-//            return $objects;
-//        };
-//
-//        $this->taskProcessingClosure = static function ($task, $mode) {
-//            new Autoloader($mode);
-//
-//            /** @var BaseTask $task */
-//            if (isset($task->class_name)) {
-//                // TODO: update all of the execute tasks
-//                // TODO: dont forget to set the recurring tasks up after they are done
-//                // TODO: put the failed task back to the scheduled execution list with an updated scheduled_at
-//                $task->execute();
-//                // TODO: logging
-//            } else {
-//                // TODO: instant execution for non tasks
-//            }
-//        };
     }
 }
