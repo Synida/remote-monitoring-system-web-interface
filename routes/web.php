@@ -20,5 +20,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 // access to login function
 Route::post('/login', 'AuthController@login');
 
+
 Route::get('/measurable', 'MeasurableController@index');
 Route::get('/measurable/active', 'MeasurableController@getActive');
