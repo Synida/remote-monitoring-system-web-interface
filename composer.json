@@ -19,8 +19,7 @@
         "laravel/passport": "^9.3",
         "laravel/socialite": "^4.4",
         "laravel/tinker": "^2.0",
-        "ext-pcntl": "*",
-        "ext-http": "*"
+        "ext-pcntl": "*"
     },
     "require-dev": {
         "codeception/codeception": "^4.1",
