@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class Measurable
  * @package App
  *
+ * @property int $id
  * @property array $fillable
  * @property string $name
  * @property string $class

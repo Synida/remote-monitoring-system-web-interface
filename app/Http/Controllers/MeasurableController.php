@@ -23,7 +23,8 @@ class MeasurableController extends Controller
      */
     public function index(Request $request)
     {
-        $exists = Measurable::where('table', '==', $request->type)
+        /** @var Measurable $exists */
+        $exists = Measurable::where('id', '==', $request->id)
             ->where('active', '==', true)
             ->first();
 
@@ -31,13 +32,19 @@ class MeasurableController extends Controller
             throw new InvalidArgumentException('There is no such active measured object!');
         }
 
-        $from = $request->from ?? 86400;
+        $from = $request->from ?? null;
+
+        if ($from === null) {
+            return MeasuredItem::setDBTable($exists->id)
+                ->orderBy('created_at')
+                ->first();
+        }
 
         if (!is_numeric($from) || $from < 0) {
             throw new InvalidArgumentException('The range limit must be a positive integer');
         }
 
-        return MeasuredItem::setDBTable($request->type)
+        return MeasuredItem::setDBTable($exists->id)
             ->where('created_at', '>', $from)
             ->get();
     }
